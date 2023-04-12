@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 //import { useLocation } from "react-router-dom";
 import { useParams } from "react-router-dom";
-import OptionList from "../components/OptionList";
+import OptionGrid from "../components/OptionGrid";
 
 let uniqueCategories;
 
@@ -65,15 +65,17 @@ function Products() {
       <h1>Products</h1>
       <p>Selecciona alguna categoría para ver los productos</p>
 
-      <OptionList
-        items={uniqueCategories}
-        defaultItem={category}
-        onClick={selectCategory}
-      />
+      {!category && (
+        <OptionGrid
+          items={uniqueCategories}
+          defaultItem={category}
+          onClick={selectCategory}
+        />
+      )}
       {category && (
         <>
           <p>Selecciona alguna subcateria para ver nuestros productos:</p>
-          <OptionList
+          <OptionGrid
             items={uniqueSubCategories}
             defaultItem={subCategory}
             onClick={selectSubCategory}
