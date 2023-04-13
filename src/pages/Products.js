@@ -10,18 +10,29 @@ let uniqueCategories;
 
 function Products() {
   //let location = useLocation();
-  const { category: defaultCategory, subCategory: defaultSubCategory } =
-    useParams();
+  const { category, subCategory } = useParams();
   const navigate = useNavigate();
   //console.log(location?.state?.category, "*************");
   const [products, setProducts] = useState([]);
-  const [category, setCategory] = useState(defaultCategory);
-  const [subCategory, setSubCategory] = useState(defaultSubCategory);
+  //const [category, setCategory] = useState(defaultCategory);
+  //const [subCategory, setSubCategory] = useState(defaultSubCategory);
 
   useEffect(() => {
-    axios.get(`http://localhost:3000/products/`).then(({ data }) => {
-      const categories = data.map((product) => product.masterCategory);
-      uniqueCategories = [...new Set(categories)];
+    axios.get(`http://localhost:3005/products/`).then(({ data }) => {
+      //const categories = data.map((product) => product.masterCategory);
+      //uniqueCategories = [...new Set(categories)];
+
+      //uniqueCategories = [{name:'caregory1', id:'ruta.img'}, {name:'caregory2', id:'pp'}]
+
+      uniqueCategories = data.reduce((acc, product) => {
+        const { masterCategory: category, id } = product;
+        const categoryExists = acc.find((item) => item.name === category);
+        if (!categoryExists) {
+          acc.push({ name: category, id });
+        }
+        return acc;
+      }, []);
+
       setProducts(data);
     });
   }, []);
@@ -30,46 +41,57 @@ function Products() {
       .then((data) => setProducts(data));
   }, []);*/
 
-  useEffect(() => {
+  /*useEffect(() => {
     setCategory(defaultCategory);
     setSubCategory(defaultSubCategory);
-  }, [defaultCategory, defaultSubCategory]);
+  }, [defaultCategory, defaultSubCategory]);*/
 
   if (products.length === 0) {
     return <div>Cargando...</div>;
   }
 
-  const selectCategory = (event) => {
-    //setCategory(event.target.innerText);
-    //setSubCategory("");
-    navigate(`/products/${event.target.innerText}`);
-  };
-  const selectSubCategory = (event) => {
-    //setSubCategory(event.target.innerText);
-    navigate(`/products/${category}/${event.target.innerText}`);
-  };
-  const uniqueSubCategories = [
-    ...new Set(
-      products
-        .filter((product) => product.masterCategory === category)
-        .map((product) => product.subCategory)
-    ),
-  ];
+  const selectCategory = (event) =>
+    navigate(`/products/${event.target.innerText || event.target.alt}`);
+
+  const loadProducts = (event) => navigate(`/product/${event.target.id}`);
+  //setCategory(event.target.innerText);
+  //setSubCategory("");
+
+  const selectSubCategory = (event) =>
+    event.target.innerText === "Volver"
+      ? navigate(`/products`)
+      : navigate(
+          `/products/${category}/${event.target.innerText || event.target.alt}`
+        );
+
+  //setSubCategory(event.target.innerText);
+
+  const uniqueSubCategories = products
+    .filter((product) => product.masterCategory === category)
+    .reduce((acc, product) => {
+      const { subCategory, id } = product;
+      const subCategoryExists = acc.find((item) => item.name === subCategory);
+      if (!subCategoryExists) {
+        acc.push({ name: subCategory, id });
+      }
+      return acc;
+    }, []);
 
   const filterProducts = products
     .filter((products) => products.masterCategory === category)
-    .filter((products) => products.subCategory === subCategory);
+    .filter((products) => products.subCategory === subCategory)
+    .map(({ productDisplayName: name, id, price }) => ({ name, id, price }));
   //console.log(products);
+
   return (
     <>
       <h1>Products</h1>
       <p>Selecciona alguna categoría para ver los productos</p>
-
       {!category && (
         <OptionGrid
           items={uniqueCategories}
-          defaultItem={category}
           onClick={selectCategory}
+          goUp={false}
         />
       )}
       {category && (
@@ -79,11 +101,17 @@ function Products() {
             items={uniqueSubCategories}
             defaultItem={subCategory}
             onClick={selectSubCategory}
+            goUp={true}
           />
         </>
       )}
-
-      {category && subCategory && <ProductsTable products={filterProducts} />}
+      {category && subCategory && (
+        <OptionGrid
+          items={filterProducts}
+          onClick={loadProducts}
+          goUp={false}
+        />
+      )}
     </>
   );
 }

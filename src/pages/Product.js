@@ -10,7 +10,7 @@ function Product() {
   const { id: productID } = useParams();
   useEffect(() => {
     axios
-      .get(`http://localhost:3000/products/${productID}`)
+      .get(`http://localhost:3005/products/${productID}`)
       .then((response) => setProducts(response.data));
   }, [productID]);
 
